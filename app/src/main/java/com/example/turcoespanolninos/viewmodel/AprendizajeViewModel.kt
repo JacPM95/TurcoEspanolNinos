@@ -59,6 +59,18 @@ class AprendizajeViewModel(application: Application) : AndroidViewModel(applicat
         persistir(nivelFinalizado = if (esUltimo) ContenidoAprendizaje.niveles.size else null)
     }
 
+    fun reiniciarRuta() {
+        _estado.update {
+            it.copy(
+                nivelActual = 0,
+                palabrasCompletadas = emptySet(),
+                medallaObtenida = false,
+                cargando = false
+            )
+        }
+        persistir()
+    }
+
     private fun persistir(nivelFinalizado: Int? = null) {
         val actual = _estado.value
         viewModelScope.launch {

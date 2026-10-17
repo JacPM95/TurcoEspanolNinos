@@ -10,7 +10,7 @@
 ## 📌 Descripción del Proyecto
 Aplicación móvil desarrollada en **Android (Kotlin)** para que niños y niñas de habla turca, de 1 a 10 años, aprendan vocabulario inicial en español. El turco se utiliza como idioma de apoyo. La experiencia usa perfiles ficticios, navegación por niveles, audio en español, retroalimentación visual y progreso local.
 
-> Privacidad: el MVP no requiere datos personales reales. La cámara y la galería se incluyen como demostración académica de recursos nativos y solo deben utilizarse con avatares, objetos o imágenes ficticias, públicas o autorizadas; nunca con fotografías reales de menores.
+> Privacidad: el MVP no requiere datos personales reales. La cámara y la galería se incluyen como demostración académica de recursos nativos y solo deben utilizarse con avatares, objetos o imágenes ficticias, públicas o autorizadas; nunca con fotografías reales de menores. La aplicación no conserva grabaciones de voz; el reconocimiento es procesado por el servicio de voz configurado en el dispositivo.
 
 ---
 
@@ -20,7 +20,9 @@ Aplicación móvil desarrollada en **Android (Kotlin)** para que niños y niñas
 * **Ruta de cuatro niveles:** Animales, naturaleza, objetos cotidianos, alimentos y colores.
 * **Vocabulario bilingüe:** Español como idioma objetivo y turco como apoyo visual.
 * **Audio nativo:** Text-to-Speech configurado en español para escuchar y repetir cada palabra.
+* **Práctica de pronunciación:** Reconocimiento de voz en español con mensajes infantiles, reintentos y tolerancia a pequeñas variaciones.
 * **Progreso y recompensas:** Una estrella por palabra, cinco extra por nivel y medalla final.
+* **Modo de repaso:** Al finalizar, permite comenzar nuevamente conservando las estrellas acumuladas.
 * **Persistencia local con DataStore:** Perfil ficticio, edad, nivel, palabras y estrellas.
 * **Validaciones:** Alias obligatorio y acceso permitido únicamente entre 1 y 10 años inclusive.
 * **Recursos nativos:** Cámara, galería, vibración y Text-to-Speech.
@@ -37,6 +39,7 @@ com.example.turcoespanolninos/
 │   └── UserPreferences.kt       # Persistencia local con DataStore
 ├── model/
 │   ├── Aprendizaje.kt           # Modelos de niveles, palabras y progreso
+│   ├── PronunciacionValidator.kt # Comparación tolerante de la pronunciación
 │   └── PerfilUsuarioUiState.kt  # Estado del formulario
 ├── viewmodel/
 │   ├── AprendizajeViewModel.kt  # Progreso, estrellas y desbloqueo
@@ -45,7 +48,7 @@ com.example.turcoespanolninos/
     ├── theme/                  # Configuración de estilos y temas
     └── screen/
         ├── RegistroPerfilScreen.kt # Pantalla de registro y formulario
-        └── VocabularioScreen.kt    # Ruta interactiva con TTS y recompensas
+        └── VocabularioScreen.kt    # Ruta con TTS, micrófono y recompensas
 ```
 
 ## ▶️ Ejecución
