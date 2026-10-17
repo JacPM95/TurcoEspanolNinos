@@ -18,8 +18,9 @@ Aplicación móvil desarrollada en **Android (Kotlin)** para que niños y niñas
 
 * **Arquitectura MVVM:** Separación limpia de capas entre la UI (`Jetpack Compose`), el estado reactivo (`StateFlow`) y la lógica de negocio (`ViewModel`).
 * **Ruta de cuatro niveles:** Animales, naturaleza, objetos cotidianos, alimentos y colores.
-* **Vocabulario bilingüe:** Español como idioma objetivo y turco como apoyo visual.
-* **Audio nativo:** Text-to-Speech configurado en español para escuchar y repetir cada palabra.
+* **Experiencia guiada en turco:** Instrucciones, permisos y retroalimentación en el idioma del niño; el español se reserva para el contenido que está aprendiendo.
+* **Vocabulario bilingüe:** Palabra objetivo en español con su traducción turca como apoyo visual.
+* **Audio nativo bilingüe:** Las consignas se reproducen en turco y cada palabra objetivo con pronunciación en español.
 * **Práctica de pronunciación:** Reconocimiento de voz en español con mensajes infantiles, reintentos y tolerancia a pequeñas variaciones.
 * **Progreso y recompensas:** Una estrella por palabra, cinco extra por nivel y medalla final.
 * **Modo de repaso:** Al finalizar, permite comenzar nuevamente conservando las estrellas acumuladas.
