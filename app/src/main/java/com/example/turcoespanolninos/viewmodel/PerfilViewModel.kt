@@ -1,7 +1,7 @@
 package com.example.turcoespanolninos.viewmodel
 
 import android.app.Application
-import android.net.Uri
+import android.graphics.Bitmap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.turcoespanolninos.data.UserPreferences
@@ -55,8 +55,8 @@ class PerfilViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun actualizarImagenPerfil(uri: Uri) {
-        _estado.update { it.copy(imagenPerfilUri = uri) }
+    fun actualizarImagenPerfil(bitmap: Bitmap) {
+        _estado.update { it.copy(imagenPerfil = bitmap) }
     }
 
     fun validarFormulario(): Boolean {

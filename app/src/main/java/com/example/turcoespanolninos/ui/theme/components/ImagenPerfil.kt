@@ -1,6 +1,6 @@
 package com.example.turcoespanolninos.ui.theme.components
 
-import android.net.Uri
+import android.graphics.Bitmap
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -18,7 +18,7 @@ import coil.compose.AsyncImage
 
 @Composable
 fun ImagenPerfil(
-    imagenUri: Uri?,
+    imagen: Bitmap?,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -27,9 +27,9 @@ fun ImagenPerfil(
         color = MaterialTheme.colorScheme.surfaceVariant,
         border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
     ) {
-        if (imagenUri != null) {
+        if (imagen != null) {
             AsyncImage(
-                model = imagenUri,
+                model = imagen,
                 contentDescription = "Fotografía de perfil",
                 modifier = Modifier.clip(CircleShape),
                 contentScale = ContentScale.Crop

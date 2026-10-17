@@ -2,8 +2,12 @@ package com.example.turcoespanolninos.ui.theme.screen
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
+import android.provider.MediaStore
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -28,10 +32,8 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import com.example.turcoespanolninos.ui.theme.components.ImagenPerfil
 import com.example.turcoespanolninos.viewmodel.PerfilViewModel
-import java.io.File
 
 // Función auxiliar para activar la respuesta háptica por vibración (Recurso Nativo)
 private fun ejecutarVibracion(context: Context) {
@@ -45,14 +47,21 @@ private fun ejecutarVibracion(context: Context) {
     }
 }
 
-private fun crearUriImagen(context: Context): Uri {
-    val directorio = File(context.cacheDir, "images").apply { mkdirs() }
-    val archivo = File.createTempFile("perfil_", ".jpg", directorio)
-    return FileProvider.getUriForFile(
-        context,
-        "${context.packageName}.fileprovider",
-        archivo
-    )
+private fun cargarImagenSoloEnMemoria(context: Context, uri: Uri): Bitmap? {
+    val opcionesTamano = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    context.contentResolver.openInputStream(uri)?.use {
+        BitmapFactory.decodeStream(it, null, opcionesTamano)
+    }
+
+    var escala = 1
+    while (opcionesTamano.outWidth / escala > 1024 || opcionesTamano.outHeight / escala > 1024) {
+        escala *= 2
+    }
+
+    val opcionesCarga = BitmapFactory.Options().apply { inSampleSize = escala }
+    return context.contentResolver.openInputStream(uri)?.use {
+        BitmapFactory.decodeStream(it, null, opcionesCarga)
+    }
 }
 
 @Composable
@@ -63,39 +72,39 @@ fun RegistroPerfilScreen(
     val estado by viewModel.estado.collectAsState()
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
-    var uriTemporal by remember { mutableStateOf<Uri?>(null) }
     var errorCamara by remember { mutableStateOf<String?>(null) }
 
-    val contratoCamara = remember { ActivityResultContracts.TakePicture() }
     val launcherCamara = rememberLauncherForActivityResult(
-        contract = contratoCamara
-    ) { capturaExitosa ->
-        if (capturaExitosa) {
-            uriTemporal?.let(viewModel::actualizarImagenPerfil)
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmapTemporal ->
+        if (bitmapTemporal != null) {
+            viewModel.actualizarImagenPerfil(bitmapTemporal)
             errorCamara = null
+        } else {
+            errorCamara = "La captura fue cancelada"
         }
-        uriTemporal = null
     }
 
     val launcherGaleria = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        uri?.let(viewModel::actualizarImagenPerfil)
+        uri?.let {
+            runCatching { cargarImagenSoloEnMemoria(context, it) }
+                .onSuccess { bitmap ->
+                    if (bitmap != null) viewModel.actualizarImagenPerfil(bitmap)
+                    else errorCamara = "No se pudo leer la imagen seleccionada"
+                }
+                .onFailure { errorCamara = "No se pudo leer la imagen seleccionada" }
+        }
     }
 
     val abrirCamara = {
         runCatching {
-            val uri = crearUriImagen(context)
-            check(contratoCamara.createIntent(context, uri).resolveActivity(context.packageManager) != null) {
+            check(Intent(MediaStore.ACTION_IMAGE_CAPTURE).resolveActivity(context.packageManager) != null) {
                 "No hay una aplicación de cámara disponible"
             }
-            uri
+            launcherCamara.launch(null)
         }
-            .onSuccess { uri ->
-                uriTemporal = uri
-                runCatching { launcherCamara.launch(uri) }
-                    .onFailure { errorCamara = "No se pudo abrir la cámara" }
-            }
             .onFailure { error ->
                 errorCamara = error.message ?: "No se pudo abrir la cámara"
             }
@@ -132,7 +141,7 @@ fun RegistroPerfilScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            ImagenPerfil(imagenUri = estado.imagenPerfilUri)
+            ImagenPerfil(imagen = estado.imagenPerfil)
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -153,8 +162,8 @@ fun RegistroPerfilScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    if (estado.imagenPerfilUri == null) {
-                        "Cámara (solo imagen de prueba)"
+                    if (estado.imagenPerfil == null) {
+                        "Cámara temporal (no se guarda)"
                     } else {
                         "Cambiar fotografía"
                     }
@@ -169,7 +178,7 @@ fun RegistroPerfilScreen(
             }
 
             Text(
-                text = "Gizlilik: Gerçek çocuk fotoğrafları kullanmayın. / Privacidad: no uses fotos reales de menores.",
+                text = "Gizlilik: Görüntü yalnızca bellekte tutulur. / Privacidad: la imagen solo se mantiene en memoria y no se guarda.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
