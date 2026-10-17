@@ -8,17 +8,23 @@
 ---
 
 ## 📌 Descripción del Proyecto
-Aplicación móvil desarrollada en **Android (Kotlin)** enfocada en la enseñanza didáctica del idioma Turco para niños menores de 10 años. Presenta una interfaz declarativa desarrollada con Jetpack Compose, con un flujo de registro simulado, validaciones en tiempo real y componentes interactivos para el aprendizaje de vocabulario bilingüe.
+Aplicación móvil desarrollada en **Android (Kotlin)** para que niños y niñas de habla turca, de 1 a 10 años, aprendan vocabulario inicial en español. El turco se utiliza como idioma de apoyo. La experiencia usa perfiles ficticios, navegación por niveles, audio en español, retroalimentación visual y progreso local.
+
+> Privacidad: el MVP no requiere datos personales reales. La cámara y la galería se incluyen como demostración académica de recursos nativos y solo deben utilizarse con avatares, objetos o imágenes ficticias, públicas o autorizadas; nunca con fotografías reales de menores.
 
 ---
 
 ## 🚀 Funcionalidades Implementadas (Versión Base)
 
 * **Arquitectura MVVM:** Separación limpia de capas entre la UI (`Jetpack Compose`), el estado reactivo (`StateFlow`) y la lógica de negocio (`ViewModel`).
-* **Módulo de Vocabulario Bilingüe:** Tarjetas dinámicas ilustradas para la enseñanza de palabras en español y turco.
-* **Integración Nativa de Audio:** Uso de la API nativa **Text-to-Speech (TTS)** configurada en turco (`tr_TR`) para la pronunciación asistida.
-* **Persistencia Local con DataStore:** Guardado asíncrono del perfil y sesión del usuario usando `Preferences DataStore`.
-* **Validación de Datos:** Lógica en el ViewModel para validar campos de usuario y restringir la edad (menores de 10 años).
+* **Ruta de cuatro niveles:** Animales, naturaleza, objetos cotidianos, alimentos y colores.
+* **Vocabulario bilingüe:** Español como idioma objetivo y turco como apoyo visual.
+* **Audio nativo:** Text-to-Speech configurado en español para escuchar y repetir cada palabra.
+* **Progreso y recompensas:** Una estrella por palabra, cinco extra por nivel y medalla final.
+* **Persistencia local con DataStore:** Perfil ficticio, edad, nivel, palabras y estrellas.
+* **Validaciones:** Alias obligatorio y acceso permitido únicamente entre 1 y 10 años inclusive.
+* **Recursos nativos:** Cámara, galería, vibración y Text-to-Speech.
+* **Adaptabilidad:** Formulario desplazable, teclado numérico y ajuste frente al teclado virtual.
 
 ---
 
@@ -27,13 +33,24 @@ Aplicación móvil desarrollada en **Android (Kotlin)** enfocada en la enseñanz
 ```text
 com.example.turcoespanolninos/
 ├── data/
+│   ├── ContenidoAprendizaje.kt  # Contenido bilingüe de los cuatro niveles
 │   └── UserPreferences.kt       # Persistencia local con DataStore
 ├── model/
-│   └── PerfilUsuarioUiState.kt  # Estados de la UI y dataclasses
+│   ├── Aprendizaje.kt           # Modelos de niveles, palabras y progreso
+│   └── PerfilUsuarioUiState.kt  # Estado del formulario
 ├── viewmodel/
-│   └── PerfilViewModel.kt       # Lógica de negocio y validaciones
+│   ├── AprendizajeViewModel.kt  # Progreso, estrellas y desbloqueo
+│   └── PerfilViewModel.kt       # Perfil y validaciones
 └── ui/
     ├── theme/                  # Configuración de estilos y temas
     └── screen/
         ├── RegistroPerfilScreen.kt # Pantalla de registro y formulario
-        └── VocabularioScreen.kt    # Pantalla interactiva con TTS
+        └── VocabularioScreen.kt    # Ruta interactiva con TTS y recompensas
+```
+
+## ▶️ Ejecución
+
+1. Abrir el proyecto en Android Studio.
+2. Sincronizar Gradle.
+3. Ejecutar en un dispositivo o emulador Android API 33 o superior.
+4. Usar únicamente un perfil y recursos visuales ficticios o autorizados.

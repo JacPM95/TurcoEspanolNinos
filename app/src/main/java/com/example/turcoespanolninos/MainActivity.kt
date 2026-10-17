@@ -13,10 +13,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.example.turcoespanolninos.ui.theme.screen.RegistroPerfilScreen
 import com.example.turcoespanolninos.ui.theme.screen.VocabularioScreen
+import com.example.turcoespanolninos.viewmodel.AprendizajeViewModel
 import com.example.turcoespanolninos.viewmodel.PerfilViewModel
 
 class MainActivity : ComponentActivity() {
     private val perfilViewModel: PerfilViewModel by viewModels()
+    private val aprendizajeViewModel: AprendizajeViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,7 +29,10 @@ class MainActivity : ComponentActivity() {
                     var mostrarVocabulario by remember { mutableStateOf(false) }
 
                     if (mostrarVocabulario) {
-                        VocabularioScreen(alias = estado.aliasFicticio)
+                        VocabularioScreen(
+                            alias = estado.aliasFicticio,
+                            viewModel = aprendizajeViewModel
+                        )
                     } else {
                         RegistroPerfilScreen(
                             viewModel = perfilViewModel,
