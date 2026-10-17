@@ -1,12 +1,13 @@
 package com.example.turcoespanolninos.viewmodel
 
 import android.app.Application
-import android.net.Uri
+import android.graphics.Bitmap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.turcoespanolninos.data.UserPreferences
 import com.example.turcoespanolninos.model.PerfilErrores
 import com.example.turcoespanolninos.model.PerfilUsuarioUiState
+import com.example.turcoespanolninos.model.PerfilValidator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -20,9 +21,16 @@ class PerfilViewModel(application: Application) : AndroidViewModel(application) 
 
     init {
         viewModelScope.launch {
-            userPreferences.guardarAlias.collect { aliasGuardado ->
+            userPreferences.aliasGuardado.collect { aliasGuardado ->
                 if (aliasGuardado.isNotEmpty()) {
                     _estado.update { it.copy(aliasFicticio = aliasGuardado) }
+                }
+            }
+        }
+        viewModelScope.launch {
+            userPreferences.edadGuardada.collect { edadGuardada ->
+                if (edadGuardada in 1..10) {
+                    _estado.update { it.copy(edadSimulada = edadGuardada.toString()) }
                 }
             }
         }
@@ -38,46 +46,38 @@ class PerfilViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun onEdadChange(nuevaEdad: String) {
+        val edadNormalizada = nuevaEdad.filter(Char::isDigit).take(2)
         _estado.update {
             it.copy(
-                edadSimulada = nuevaEdad,
+                edadSimulada = edadNormalizada,
                 errores = it.errores.copy(edadSimulada = null)
             )
         }
     }
 
-    fun actualizarImagenPerfil(uri: Uri) {
-        _estado.update { it.copy(imagenPerfilUri = uri) }
+    fun actualizarImagenPerfil(bitmap: Bitmap) {
+        _estado.update { it.copy(imagenPerfil = bitmap) }
     }
 
     fun validarFormulario(): Boolean {
         val actual = _estado.value
-        val edadNum = actual.edadSimulada.toIntOrNull()
-
-        val errAlias = if (actual.aliasFicticio.isBlank()) "Ingresa un apodo ficticio" else null
-        val errEdad = when {
-            edadNum == null -> "Ingresa una edad válida"
-            edadNum <= 0 || edadNum >= 10 -> "La app es solo para menores de 10 años"
-            else -> null
-        }
-
-        val hayErrores = errAlias != null || errEdad != null
+        val resultado = PerfilValidator.validar(actual.aliasFicticio, actual.edadSimulada)
 
         _estado.update {
             it.copy(
                 errores = PerfilErrores(
-                    aliasFicticio = errAlias,
-                    edadSimulada = errEdad
+                    aliasFicticio = resultado.aliasError,
+                    edadSimulada = resultado.edadError
                 )
             )
         }
 
-        if (!hayErrores) {
+        if (resultado.esValido) {
             viewModelScope.launch {
-                userPreferences.salvarAlias(actual.aliasFicticio)
+                userPreferences.guardarPerfil(actual.aliasFicticio.trim(), resultado.edad!!)
             }
         }
 
-        return !hayErrores
+        return resultado.esValido
     }
 }

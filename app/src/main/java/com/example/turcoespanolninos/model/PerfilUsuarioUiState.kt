@@ -1,12 +1,12 @@
 package com.example.turcoespanolninos.model
 
-import android.net.Uri
+import android.graphics.Bitmap
 
 data class PerfilUsuarioUiState(
     val aliasFicticio: String = "",
     val edadSimulada: String = "",
     val moduloSeleccionado: String = "Animales",
-    val imagenPerfilUri: Uri? = null,
+    val imagenPerfil: Bitmap? = null,
     val errores: PerfilErrores = PerfilErrores()
 )
 
