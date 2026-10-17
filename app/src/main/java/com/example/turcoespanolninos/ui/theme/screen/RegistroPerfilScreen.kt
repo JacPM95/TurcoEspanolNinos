@@ -2,12 +2,10 @@ package com.example.turcoespanolninos.ui.theme.screen
 
 import android.Manifest
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.provider.MediaStore
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -100,9 +98,6 @@ fun RegistroPerfilScreen(
 
     val abrirCamara = {
         runCatching {
-            check(Intent(MediaStore.ACTION_IMAGE_CAPTURE).resolveActivity(context.packageManager) != null) {
-                "No hay una aplicación de cámara disponible"
-            }
             launcherCamara.launch(null)
         }
             .onFailure { error ->
