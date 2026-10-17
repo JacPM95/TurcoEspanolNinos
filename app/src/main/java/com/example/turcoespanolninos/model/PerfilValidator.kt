@@ -12,10 +12,10 @@ object PerfilValidator {
     fun validar(alias: String, edadTexto: String): ResultadoValidacionPerfil {
         val edad = edadTexto.trim().toIntOrNull()
         return ResultadoValidacionPerfil(
-            aliasError = if (alias.isBlank()) "Ingresa un apodo ficticio" else null,
+            aliasError = if (alias.isBlank()) "Lütfen bir takma ad gir" else null,
             edadError = when {
-                edad == null -> "Ingresa una edad válida"
-                edad !in 1..10 -> "La aplicación es para niños de 10 años o menos"
+                edad == null -> "Lütfen geçerli bir yaş gir"
+                edad !in 1..10 -> "Bu uygulama 1–10 yaş arası çocuklar içindir"
                 else -> null
             },
             edad = edad

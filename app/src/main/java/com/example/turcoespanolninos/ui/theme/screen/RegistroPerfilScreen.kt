@@ -79,7 +79,7 @@ fun RegistroPerfilScreen(
             viewModel.actualizarImagenPerfil(bitmapTemporal)
             errorCamara = null
         } else {
-            errorCamara = "La captura fue cancelada"
+            errorCamara = "Fotoğraf çekimi iptal edildi"
         }
     }
 
@@ -90,9 +90,9 @@ fun RegistroPerfilScreen(
             runCatching { cargarImagenSoloEnMemoria(context, it) }
                 .onSuccess { bitmap ->
                     if (bitmap != null) viewModel.actualizarImagenPerfil(bitmap)
-                    else errorCamara = "No se pudo leer la imagen seleccionada"
+                    else errorCamara = "Seçilen görsel okunamadı"
                 }
-                .onFailure { errorCamara = "No se pudo leer la imagen seleccionada" }
+                .onFailure { errorCamara = "Seçilen görsel okunamadı" }
         }
     }
 
@@ -101,7 +101,7 @@ fun RegistroPerfilScreen(
             launcherCamara.launch(null)
         }
             .onFailure { error ->
-                errorCamara = error.message ?: "No se pudo abrir la cámara"
+                errorCamara = error.message ?: "Kamera açılamadı"
             }
     }
 
@@ -111,7 +111,7 @@ fun RegistroPerfilScreen(
         if (permisoConcedido) {
             abrirCamara()
         } else {
-            errorCamara = "Se necesita permiso de cámara para tomar la fotografía"
+            errorCamara = "Fotoğraf çekmek için kamera izni gerekiyor"
         }
     }
 
@@ -130,7 +130,7 @@ fun RegistroPerfilScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "İspanyolca öğrenelim! / ¡Aprendamos español!",
+                text = "İspanyolca öğrenelim!",
                 style = MaterialTheme.typography.headlineMedium
             )
 
@@ -158,9 +158,9 @@ fun RegistroPerfilScreen(
             ) {
                 Text(
                     if (estado.imagenPerfil == null) {
-                        "Cámara temporal (no se guarda)"
+                        "Geçici fotoğraf çek (kaydedilmez)"
                     } else {
-                        "Cambiar fotografía"
+                        "Fotoğrafı değiştir"
                     }
                 )
             }
@@ -169,11 +169,11 @@ fun RegistroPerfilScreen(
                 onClick = { launcherGaleria.launch("image/*") },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Elegir avatar o imagen autorizada")
+                Text("Avatar veya izinli bir görsel seç")
             }
 
             Text(
-                text = "Gizlilik: Görüntü yalnızca bellekte tutulur. / Privacidad: la imagen solo se mantiene en memoria y no se guarda.",
+                text = "Gizlilik: Görsel yalnızca bellekte tutulur ve kaydedilmez.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -192,7 +192,7 @@ fun RegistroPerfilScreen(
             OutlinedTextField(
                 value = estado.aliasFicticio,
                 onValueChange = viewModel::onAliasChange,
-                label = { Text("Takma ad / Alias ficticio") },
+                label = { Text("Takma ad") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                 isError = estado.errores.aliasFicticio != null,
@@ -200,7 +200,7 @@ fun RegistroPerfilScreen(
                     if (estado.errores.aliasFicticio != null) {
                         Icon(
                             imageVector = Icons.Default.Warning,
-                            contentDescription = "Error de validación",
+                            contentDescription = "Doğrulama hatası",
                             tint = MaterialTheme.colorScheme.error
                         )
                     }
@@ -225,7 +225,7 @@ fun RegistroPerfilScreen(
             OutlinedTextField(
                 value = estado.edadSimulada,
                 onValueChange = viewModel::onEdadChange,
-                label = { Text("Yaş / Edad (1 a 10 años)") },
+                label = { Text("Yaş (1–10)") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,
@@ -239,7 +239,7 @@ fun RegistroPerfilScreen(
                     if (estado.errores.edadSimulada != null) {
                         Icon(
                             imageVector = Icons.Default.Warning,
-                            contentDescription = "Error de validación",
+                            contentDescription = "Doğrulama hatası",
                             tint = MaterialTheme.colorScheme.error
                         )
                     }
@@ -272,7 +272,7 @@ fun RegistroPerfilScreen(
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Comenzar / Başla")
+                Text("Başla")
             }
         }
     }

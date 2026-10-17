@@ -4,10 +4,13 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -49,22 +52,45 @@ fun VocabularioScreen(alias: String, viewModel: AprendizajeViewModel) {
     fun mensajeErrorReconocimiento(error: Int): String = when (error) {
         SpeechRecognizer.ERROR_NO_MATCH,
         SpeechRecognizer.ERROR_SPEECH_TIMEOUT ->
-            "No alcancé a escuchar la palabra. ¡Intentémoslo otra vez!"
+            "Kelimeyi duyamadım. Bir kez daha deneyelim!"
         SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS ->
-            "Necesitamos permiso para usar el micrófono."
+            "Mikrofonu kullanmak için izne ihtiyacımız var."
         SpeechRecognizer.ERROR_NETWORK,
         SpeechRecognizer.ERROR_NETWORK_TIMEOUT ->
-            "La voz no está disponible ahora. Revisa la conexión e inténtalo nuevamente."
-        else -> "No pude escuchar bien. ¡Probemos una vez más!"
+            "Ses tanıma şu anda kullanılamıyor. Bağlantını kontrol edip tekrar dene."
+        else -> "Seni net duyamadım. Bir kez daha deneyelim!"
     }
 
     DisposableEffect(Unit) {
         val motor = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                ttsDisponible = tts?.setLanguage(Locale.forLanguageTag("es-ES")) !=
-                    TextToSpeech.LANG_MISSING_DATA
+                val turco = tts?.setLanguage(Locale.forLanguageTag("tr-TR"))
+                val espanol = tts?.setLanguage(Locale.forLanguageTag("es-ES"))
+                ttsDisponible = turco != TextToSpeech.LANG_MISSING_DATA &&
+                    turco != TextToSpeech.LANG_NOT_SUPPORTED &&
+                    espanol != TextToSpeech.LANG_MISSING_DATA &&
+                    espanol != TextToSpeech.LANG_NOT_SUPPORTED
             }
         }
+        val handlerPrincipal = Handler(Looper.getMainLooper())
+        motor.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+            override fun onStart(utteranceId: String?) = Unit
+            override fun onError(utteranceId: String?) = Unit
+            override fun onDone(utteranceId: String?) {
+                if (utteranceId?.startsWith("practica_instruccion_") != true) return
+                handlerPrincipal.post {
+                    val palabra = palabraActualizada ?: return@post
+                    if (utteranceId != "practica_instruccion_${palabra.id}") return@post
+                    motor.language = Locale.forLanguageTag("es-ES")
+                    motor.speak(
+                        palabra.espanol,
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "practica_palabra_${palabra.id}"
+                    )
+                }
+            }
+        })
         tts = motor
 
         val motorVoz = if (SpeechRecognizer.isRecognitionAvailable(context)) {
@@ -74,13 +100,13 @@ fun VocabularioScreen(alias: String, viewModel: AprendizajeViewModel) {
         motorVoz?.setRecognitionListener(object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
                 resultadoPractica = ResultadoPractica.ESCUCHANDO
-                mensajePractica = "Te escucho… di la palabra con calma."
+                mensajePractica = "Seni dinliyorum… Kelimeyi yavaşça söyle."
             }
             override fun onBeginningOfSpeech() = Unit
             override fun onRmsChanged(rmsdB: Float) = Unit
             override fun onBufferReceived(buffer: ByteArray?) = Unit
             override fun onEndOfSpeech() {
-                mensajePractica = "¡Muy bien! Estoy comprobando tu respuesta…"
+                mensajePractica = "Harika! Cevabını kontrol ediyorum…"
             }
             override fun onError(error: Int) {
                 resultadoPractica = ResultadoPractica.REINTENTAR
@@ -94,11 +120,11 @@ fun VocabularioScreen(alias: String, viewModel: AprendizajeViewModel) {
                 if (PronunciacionValidator.coincide(palabra.espanol, alternativas)) {
                     viewModel.marcarPalabraAprendida(palabra.id)
                     resultadoPractica = ResultadoPractica.CORRECTO
-                    mensajePractica = "¡Excelente! Dijiste ${palabra.espanol}. Ganaste una estrella."
+                    mensajePractica = "Harika! “${palabra.espanol}” dedin. Bir yıldız kazandın."
                 } else {
                     resultadoPractica = ResultadoPractica.REINTENTAR
                     mensajePractica =
-                        "¡Casi lo tienes! Escucha ${palabra.espanol} e inténtalo nuevamente."
+                        "Neredeyse oldu! “${palabra.espanol}” kelimesini dinle ve tekrar dene."
                 }
             }
             override fun onPartialResults(partialResults: Bundle?) = Unit
@@ -117,23 +143,23 @@ fun VocabularioScreen(alias: String, viewModel: AprendizajeViewModel) {
         val palabra = palabraPractica ?: return
         if (reconocedor == null) {
             resultadoPractica = ResultadoPractica.REINTENTAR
-            mensajePractica = "Este dispositivo no tiene reconocimiento de voz disponible."
+            mensajePractica = "Bu cihazda ses tanıma kullanılamıyor."
             return
         }
         resultadoPractica = ResultadoPractica.ESCUCHANDO
-        mensajePractica = "Preparando el micrófono…"
+        mensajePractica = "Mikrofon hazırlanıyor…"
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "es-ES")
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "es-ES")
             putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false)
-            putExtra(RecognizerIntent.EXTRA_PROMPT, "Di: ${palabra.espanol}")
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "Söyle: ${palabra.espanol}")
         }
         runCatching { reconocedor?.startListening(intent) }
             .onFailure {
                 resultadoPractica = ResultadoPractica.REINTENTAR
-                mensajePractica = "No pude iniciar el micrófono. ¡Intentemos nuevamente!"
+                mensajePractica = "Mikrofon başlatılamadı. Bir kez daha deneyelim!"
             }
     }
 
@@ -143,7 +169,7 @@ fun VocabularioScreen(alias: String, viewModel: AprendizajeViewModel) {
         if (concedido) iniciarEscucha()
         else {
             resultadoPractica = ResultadoPractica.REINTENTAR
-            mensajePractica = "Necesitamos permiso para escucharte practicar."
+            mensajePractica = "Pratik yaparken seni dinleyebilmemiz için mikrofon izni gerekiyor."
         }
     }
 
@@ -170,19 +196,19 @@ fun VocabularioScreen(alias: String, viewModel: AprendizajeViewModel) {
     val completadas = nivel.palabras.count { it.id in estado.palabrasCompletadas }
     val progreso = completadas.toFloat() / nivel.palabras.size
 
-    Scaffold(topBar = { TopAppBar(title = { Text("¡Hola, $alias! / Merhaba!") }) }) { padding ->
+    Scaffold(topBar = { TopAppBar(title = { Text("Merhaba, $alias!") }) }) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
                 Text(
-                    "Nivel ${nivel.numero}: ${nivel.tituloEspanol}",
+                    "Seviye ${nivel.numero}: ${nivel.tituloTurco}",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    "${nivel.tituloTurco} · Aprende español",
+                    "${nivel.tituloEspanol} · İspanyolca öğren",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -190,7 +216,7 @@ fun VocabularioScreen(alias: String, viewModel: AprendizajeViewModel) {
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Progreso: $completadas/${nivel.palabras.size}")
+                    Text("İlerleme: $completadas/${nivel.palabras.size}")
                     Text("⭐ ${estado.estrellas}")
                 }
                 LinearProgressIndicator(
@@ -198,7 +224,7 @@ fun VocabularioScreen(alias: String, viewModel: AprendizajeViewModel) {
                     modifier = Modifier.fillMaxWidth().padding(top = 6.dp)
                 )
                 Text(
-                    "Escucha cada palabra y practica su pronunciación para ganar una estrella.",
+                    "Her kelimeyi dinle, İspanyolca tekrar et ve bir yıldız kazan.",
                     modifier = Modifier.padding(vertical = 12.dp),
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -210,17 +236,19 @@ fun VocabularioScreen(alias: String, viewModel: AprendizajeViewModel) {
                     completada = palabra.id in estado.palabrasCompletadas,
                     audioDisponible = ttsDisponible,
                     onEscuchar = {
+                        tts?.language = Locale.forLanguageTag("es-ES")
                         tts?.speak(palabra.espanol, TextToSpeech.QUEUE_FLUSH, null, palabra.id)
                     },
                     onPracticar = {
                         palabraPractica = palabra
                         resultadoPractica = ResultadoPractica.PENDIENTE
-                        mensajePractica = "Ahora repite conmigo: ${palabra.espanol}."
+                        mensajePractica = "Şimdi benimle tekrar et: ${palabra.espanol}."
+                        tts?.language = Locale.forLanguageTag("tr-TR")
                         tts?.speak(
-                            "Ahora repite conmigo: ${palabra.espanol}",
+                            "Şimdi benimle tekrar et.",
                             TextToSpeech.QUEUE_FLUSH,
                             null,
-                            "practica_${palabra.id}"
+                            "practica_instruccion_${palabra.id}"
                         )
                     }
                 )
@@ -237,8 +265,8 @@ fun VocabularioScreen(alias: String, viewModel: AprendizajeViewModel) {
                     ) {
                         Text(
                             if (nivel.numero == ContenidoAprendizaje.niveles.size)
-                                "Finalizar ruta / Rotayı bitir"
-                            else "Siguiente nivel / Sonraki seviye"
+                                "Rotayı tamamla"
+                            else "Sonraki seviye"
                         )
                     }
                 }
@@ -252,13 +280,13 @@ fun VocabularioScreen(alias: String, viewModel: AprendizajeViewModel) {
                 if (resultadoPractica != ResultadoPractica.ESCUCHANDO) palabraPractica = null
             },
             icon = { Text(if (resultadoPractica == ResultadoPractica.CORRECTO) "⭐" else "🎤") },
-            title = { Text("Practiquemos: ${palabra.espanol}") },
+            title = { Text("Hadi pratik yapalım: ${palabra.espanol}") },
             text = {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(mensajePractica, textAlign = TextAlign.Center)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        "La app no guarda tu grabación; el servicio de voz del dispositivo la procesa.",
+                        "Uygulama ses kaydını saklamaz; cihazın ses tanıma hizmeti sesi işler.",
                         style = MaterialTheme.typography.bodySmall,
                         textAlign = TextAlign.Center
                     )
@@ -267,11 +295,11 @@ fun VocabularioScreen(alias: String, viewModel: AprendizajeViewModel) {
             confirmButton = {
                 when (resultadoPractica) {
                     ResultadoPractica.CORRECTO -> TextButton(onClick = { palabraPractica = null }) {
-                        Text("Continuar")
+                        Text("Devam et")
                     }
-                    ResultadoPractica.ESCUCHANDO -> TextButton(onClick = {}) { Text("Escuchando…") }
+                    ResultadoPractica.ESCUCHANDO -> TextButton(onClick = {}) { Text("Dinliyorum…") }
                     else -> Button(onClick = { solicitarEscucha() }) {
-                        Text(if (resultadoPractica == ResultadoPractica.REINTENTAR) "Intentar otra vez" else "🎤 Repetir")
+                        Text(if (resultadoPractica == ResultadoPractica.REINTENTAR) "Tekrar dene" else "🎤 Tekrar et")
                     }
                 }
             },
@@ -280,13 +308,14 @@ fun VocabularioScreen(alias: String, viewModel: AprendizajeViewModel) {
                     resultadoPractica != ResultadoPractica.CORRECTO
                 ) {
                     TextButton(onClick = {
+                        tts?.language = Locale.forLanguageTag("es-ES")
                         tts?.speak(
                             palabra.espanol,
                             TextToSpeech.QUEUE_FLUSH,
                             null,
                             "repetir_${palabra.id}"
                         )
-                    }) { Text("🔊 Escuchar") }
+                    }) { Text("🔊 Dinle") }
                 }
             }
         )
@@ -330,12 +359,12 @@ private fun TarjetaPalabra(
                     onClick = onEscuchar,
                     enabled = audioDisponible,
                     modifier = Modifier.weight(1f)
-                ) { Text("🔊 Español") }
+                ) { Text("🔊 Dinle") }
                 Button(
                     onClick = onPracticar,
                     enabled = !completada,
                     modifier = Modifier.weight(1f)
-                ) { Text(if (completada) "✓ Pronunciada" else "Ya la aprendí") }
+                ) { Text(if (completada) "✓ Söyledin" else "Öğrendim") }
             }
         }
     }
@@ -352,33 +381,33 @@ private fun PantallaFelicitaciones(alias: String, estrellas: Int, onRepasar: () 
             Text("🏅", style = MaterialTheme.typography.displayLarge)
             Spacer(modifier = Modifier.size(20.dp))
             Text(
-                "¡FELICIDADES, $alias!",
+                "TEBRİKLER, $alias!",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
             Text(
-                "Tebrikler! Dört seviyeyi tamamladın.",
+                "Dört seviyeyi tamamladın.",
                 modifier = Modifier.padding(top = 8.dp),
                 textAlign = TextAlign.Center
             )
             Text(
-                "Has superado los cuatro niveles. ¡Sigue practicando español!",
+                "İspanyolca öğrenme yolculuğunu tamamladın. Pratik yapmaya devam et!",
                 modifier = Modifier.padding(top = 16.dp),
                 style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center
             )
             Text(
-                "⭐ $estrellas estrellas acumuladas",
+                "⭐ $estrellas yıldız biriktirdin",
                 modifier = Modifier.padding(top = 24.dp),
                 style = MaterialTheme.typography.titleLarge
             )
             Button(
                 onClick = onRepasar,
                 modifier = Modifier.fillMaxWidth().padding(top = 28.dp)
-            ) { Text("Repasar nuevamente / Yeniden çalış") }
+            ) { Text("Yeniden çalış") }
             Text(
-                "Conservarás tus estrellas y podrás acumular más.",
+                "Yıldızların korunacak ve daha fazlasını kazanabileceksin.",
                 modifier = Modifier.padding(top = 8.dp),
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.Center
