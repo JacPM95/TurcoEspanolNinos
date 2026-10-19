@@ -1,64 +1,36 @@
 package com.example.turcoespanolninos.ui.theme.screen
 
-import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.net.Uri
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
-import com.example.turcoespanolninos.ui.theme.components.ImagenPerfil
 import com.example.turcoespanolninos.viewmodel.PerfilViewModel
+import kotlinx.coroutines.delay
 
-// Función auxiliar para activar la respuesta háptica por vibración (Recurso Nativo)
 private fun ejecutarVibracion(context: Context) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-        vibratorManager.defaultVibrator.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE))
-    } else {
-        @Suppress("DEPRECATION")
-        val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        vibrator.vibrate(100)
-    }
-}
-
-private fun cargarImagenSoloEnMemoria(context: Context, uri: Uri): Bitmap? {
-    val opcionesTamano = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-    context.contentResolver.openInputStream(uri)?.use {
-        BitmapFactory.decodeStream(it, null, opcionesTamano)
-    }
-
-    var escala = 1
-    while (opcionesTamano.outWidth / escala > 1024 || opcionesTamano.outHeight / escala > 1024) {
-        escala *= 2
-    }
-
-    val opcionesCarga = BitmapFactory.Options().apply { inSampleSize = escala }
-    return context.contentResolver.openInputStream(uri)?.use {
-        BitmapFactory.decodeStream(it, null, opcionesCarga)
+    try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+            vibratorManager?.defaultVibrator?.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            @Suppress("DEPRECATION")
+            val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+            vibrator?.vibrate(100)
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
     }
 }
 
@@ -69,210 +41,97 @@ fun RegistroPerfilScreen(
 ) {
     val estado by viewModel.estado.collectAsState()
     val context = LocalContext.current
-    val focusManager = LocalFocusManager.current
-    var errorCamara by remember { mutableStateOf<String?>(null) }
+    val scrollState = rememberScrollState()
 
-    val launcherCamara = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview()
-    ) { bitmapTemporal ->
-        if (bitmapTemporal != null) {
-            viewModel.actualizarImagenPerfil(bitmapTemporal)
-            errorCamara = null
-        } else {
-            errorCamara = "Fotoğraf çekimi iptal edildi"
-        }
+    // Control para forzar el inicio de la animación de entrada
+    var visibilidadFormulario by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        delay(100) // Breve pausa para asegurar el renderizado
+        visibilidadFormulario = true
     }
 
-    val launcherGaleria = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        uri?.let {
-            runCatching { cargarImagenSoloEnMemoria(context, it) }
-                .onSuccess { bitmap ->
-                    if (bitmap != null) viewModel.actualizarImagenPerfil(bitmap)
-                    else errorCamara = "Seçilen görsel okunamadı"
-                }
-                .onFailure { errorCamara = "Seçilen görsel okunamadı" }
-        }
-    }
-
-    val abrirCamara = {
-        runCatching {
-            launcherCamara.launch(null)
-        }
-            .onFailure { error ->
-                errorCamara = error.message ?: "Kamera açılamadı"
-            }
-    }
-
-    val launcherPermisoCamara = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { permisoConcedido ->
-        if (permisoConcedido) {
-            abrirCamara()
-        } else {
-            errorCamara = "Fotoğraf çekmek için kamera izni gerekiyor"
-        }
-    }
-
-    // 1. ANIMACIÓN DE ENTRADA COMPLETA DE LA PANTALLA
-    AnimatedVisibility(
-        visible = true,
-        enter = fadeIn() + expandVertically()
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .imePadding()
-                .verticalScroll(rememberScrollState())
-                .padding(all = 24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+        // ANIMACIÓN DE ENTRADA VISIBLE (Desvanecimiento y Desplazamiento desde abajo)
+        AnimatedVisibility(
+            visible = visibilidadFormulario,
+            enter = fadeIn(animationSpec = tween(durationMillis = 800)) +
+                    slideInVertically(
+                        initialOffsetY = { it / 2 },
+                        animationSpec = tween(durationMillis = 800)
+                    )
         ) {
-            Text(
-                text = "İspanyolca öğrenelim!",
-                style = MaterialTheme.typography.headlineMedium
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            ImagenPerfil(imagen = estado.imagenPerfil)
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedButton(
-                onClick = {
-                    errorCamara = null
-                    if (
-                        ContextCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.CAMERA
-                        ) == PackageManager.PERMISSION_GRANTED
-                    ) {
-                        abrirCamara()
-                    } else {
-                        launcherPermisoCamara.launch(Manifest.permission.CAMERA)
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    if (estado.imagenPerfil == null) {
-                        "Geçici fotoğraf çek (kaydedilmez)"
-                    } else {
-                        "Fotoğrafı değiştir"
-                    }
+                    text = "¡Bienvenido! / Hoş geldiniz!",
+                    style = MaterialTheme.typography.headlineMedium
                 )
-            }
 
-            OutlinedButton(
-                onClick = { launcherGaleria.launch("image/*") },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Avatar veya izinli bir görsel seç")
-            }
+                Spacer(modifier = Modifier.height(24.dp))
 
-            Text(
-                text = "Gizlilik: Görsel yalnızca bellekte tutulur ve kaydedilmez.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            errorCamara?.let { mensaje ->
-                Text(
-                    text = mensaje,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Campo Alias / Apodo
-            OutlinedTextField(
-                value = estado.aliasFicticio,
-                onValueChange = viewModel::onAliasChange,
-                label = { Text("Takma ad") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                isError = estado.errores.aliasFicticio != null,
-                trailingIcon = {
-                    if (estado.errores.aliasFicticio != null) {
-                        Icon(
-                            imageVector = Icons.Default.Warning,
-                            contentDescription = "Doğrulama hatası",
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
-                },
-                supportingText = {
-                    // 2. ANIMACIÓN FLUIDA PARA LA APARICIÓN DEL MENSAJE DE ERROR
-                    AnimatedVisibility(
-                        visible = estado.errores.aliasFicticio != null,
-                        enter = fadeIn() + slideInVertically()
-                    ) {
+                // Campo Alias / Apodo
+                OutlinedTextField(
+                    value = estado.aliasFicticio,
+                    onValueChange = viewModel::onAliasChange,
+                    label = { Text("Apodo/Alias Ficticio") },
+                    isError = estado.errores.aliasFicticio != null,
+                    trailingIcon = {
+                        if (estado.errores.aliasFicticio != null) {
+                            Text(text = "⚠️", color = MaterialTheme.colorScheme.error)
+                        }
+                    },
+                    supportingText = {
                         estado.errores.aliasFicticio?.let { mensaje ->
                             Text(text = mensaje, color = MaterialTheme.colorScheme.error)
                         }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-            Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-            // Campo Edad (1 a 10 años, inclusive)
-            OutlinedTextField(
-                value = estado.edadSimulada,
-                onValueChange = viewModel::onEdadChange,
-                label = { Text("Yaş (1–10)") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = { focusManager.clearFocus() }
-                ),
-                isError = estado.errores.edadSimulada != null,
-                trailingIcon = {
-                    if (estado.errores.edadSimulada != null) {
-                        Icon(
-                            imageVector = Icons.Default.Warning,
-                            contentDescription = "Doğrulama hatası",
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
-                },
-                supportingText = {
-                    // ANIMACIÓN FLUIDA PARA EL ERROR DE EDAD
-                    AnimatedVisibility(
-                        visible = estado.errores.edadSimulada != null,
-                        enter = fadeIn() + slideInVertically()
-                    ) {
+                // Campo Edad
+                OutlinedTextField(
+                    value = estado.edadSimulada,
+                    onValueChange = viewModel::onEdadChange,
+                    label = { Text("Edad (Menor a 10 años)") },
+                    isError = estado.errores.edadSimulada != null,
+                    trailingIcon = {
+                        if (estado.errores.edadSimulada != null) {
+                            Text(text = "⚠️", color = MaterialTheme.colorScheme.error)
+                        }
+                    },
+                    supportingText = {
                         estado.errores.edadSimulada?.let { mensaje ->
                             Text(text = mensaje, color = MaterialTheme.colorScheme.error)
                         }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            Button(
-                onClick = {
-                    // Ejecuta la respuesta háptica (vibración) al pulsar el botón
-                    ejecutarVibracion(context)
-
-                    if (viewModel.validarFormulario()) {
-                        focusManager.clearFocus()
-                        onRegistroExitoso()
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Başla")
+                Button(
+                    onClick = {
+                        ejecutarVibracion(context)
+                        if (viewModel.validarFormulario()) {
+                            onRegistroExitoso()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Comenzar Aprendizaje")
+                }
             }
         }
     }
