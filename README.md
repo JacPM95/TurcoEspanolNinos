@@ -1,60 +1,43 @@
-# Aplicación Educativa: Aprendizaje Bilingüe Turco - Español para Niños
+# 📱 Mobile TurcoEspañolNiños
+
+Aplicación móvil educativa e interactiva diseñada para la enseñanza bilingüe (Turco - Español) orientada a niños, desarrollada en Android nativo con Kotlin y Jetpack Compose.
+
+---
 
 ## 👥 Integrantes del Equipo
-* **Hans Roman** -
 * **Jacqueline Pérez**
-* **Carolina Gavilan**
+* **Carolina Gavilán**
+* **Hans Román**
 
 ---
 
-## 📌 Descripción del Proyecto
-Aplicación móvil desarrollada en **Android (Kotlin)** para que niños y niñas de habla turca, de 1 a 10 años, aprendan vocabulario inicial en español. El turco se utiliza como idioma de apoyo. La experiencia usa perfiles ficticios, navegación por niveles, audio en español, retroalimentación visual y progreso local.
-
-> Privacidad: el MVP no requiere datos personales reales. La cámara y la galería se incluyen como demostración académica de recursos nativos y solo deben utilizarse con avatares, objetos o imágenes ficticias, públicas o autorizadas; nunca con fotografías reales de menores. La aplicación no conserva grabaciones de voz; el reconocimiento es procesado por el servicio de voz configurado en el dispositivo.
+## 📝 Descripción del Proyecto
+**TurcoEspañolNiños** es una herramienta digital de aprendizaje que combina componentes visuales interactivos, animaciones dinámicas y retroalimentación táctil/sonora para facilitar la adquisición de vocabulario en turco y español para niños. Implementa estándares modernos de arquitectura Android para asegurar rendimiento, escalabilidad y una experiencia de usuario fluida.
 
 ---
 
-## 🚀 Funcionalidades Implementadas (Versión Base)
-
-* **Arquitectura MVVM:** Separación limpia de capas entre la UI (`Jetpack Compose`), el estado reactivo (`StateFlow`) y la lógica de negocio (`ViewModel`).
-* **Ruta de cuatro niveles:** Animales, naturaleza, objetos cotidianos, alimentos y colores.
-* **Experiencia guiada en turco:** Instrucciones, permisos y retroalimentación en el idioma del niño; el español se reserva para el contenido que está aprendiendo.
-* **Vocabulario bilingüe:** Palabra objetivo en español con su traducción turca como apoyo visual.
-* **Audio nativo bilingüe:** Las consignas se reproducen en turco y cada palabra objetivo con pronunciación en español.
-* **Práctica de pronunciación:** Reconocimiento de voz en español con mensajes infantiles, reintentos y tolerancia a pequeñas variaciones.
-* **Progreso y recompensas:** Una estrella por palabra, cinco extra por nivel y medalla final.
-* **Modo de repaso:** Al finalizar, permite comenzar nuevamente conservando las estrellas acumuladas.
-* **Persistencia local con DataStore:** Perfil ficticio, edad, nivel, palabras y estrellas.
-* **Validaciones:** Alias obligatorio y acceso permitido únicamente entre 1 y 10 años inclusive.
-* **Recursos nativos:** Cámara, galería, vibración y Text-to-Speech.
-* **Adaptabilidad:** Formulario desplazable, teclado numérico y ajuste frente al teclado virtual.
+## ✨ Funcionalidades Principales
+* **Registro y Gestión de Perfil de Usuario:** Creación de perfil con validaciones en tiempo real (alias obligatorio, rango de edad de 1 a 10 años).
+* **Módulo de Vocabulario Interactivo:** Tarjetas bilingües con apoyo visual, audio nativo y práctica de pronunciación.
+* **Animaciones e Interfaz Fluida:** Integración de `AnimatedVisibility` para transiciones suaves entre vistas.
+* **Persistencia de Datos Local:** Guardado de preferencias de usuario mediante `Preferences DataStore` (`UserPreferences`).
+* **Pruebas Unitarias Integradas:** Suite de test unitarios para validación automática de lógica de negocio (`PerfilValidatorTest`, `PronunciacionValidatorTest`).
+* **Soporte de Recursos Nativos:** Retroalimentación con vibración nativa del dispositivo, acceso a cámara/galería y síntesis de voz (Text-to-Speech).
 
 ---
 
-## 🏗️ Estructura Modular del Proyecto
+## 🛠️ Arquitectura y Tecnologías
+* **Lenguaje:** Kotlin
+* **UI Framework:** Jetpack Compose (Declarativa)
+* **Arquitectura:** MVVM (Model - View - ViewModel) con Unidirectional Data Flow (UDF)
+* **Gestión de Estado:** `StateFlow` & `LiveData`
+* **Persistencia:** Android Jetpack DataStore (`UserPreferences`)
+* **Testing:** JUnit & Kotlin Test Framework
 
-```text
-com.example.turcoespanolninos/
-├── data/
-│   ├── ContenidoAprendizaje.kt  # Contenido bilingüe de los cuatro niveles
-│   └── UserPreferences.kt       # Persistencia local con DataStore
-├── model/
-│   ├── Aprendizaje.kt           # Modelos de niveles, palabras y progreso
-│   ├── PronunciacionValidator.kt # Comparación tolerante de la pronunciación
-│   └── PerfilUsuarioUiState.kt  # Estado del formulario
-├── viewmodel/
-│   ├── AprendizajeViewModel.kt  # Progreso, estrellas y desbloqueo
-│   └── PerfilViewModel.kt       # Perfil y validaciones
-└── ui/
-    ├── theme/                  # Configuración de estilos y temas
-    └── screen/
-        ├── RegistroPerfilScreen.kt # Pantalla de registro y formulario
-        └── VocabularioScreen.kt    # Ruta con TTS, micrófono y recompensas
-```
+---
 
-## ▶️ Ejecución
+## 🚀 Pasos para Ejecutar el Proyecto
 
-1. Abrir el proyecto en Android Studio.
-2. Sincronizar Gradle.
-3. Ejecutar en un dispositivo o emulador Android API 33 o superior.
-4. Usar únicamente un perfil y recursos visuales ficticios o autorizados.
+1. **Clonar el Repositorio:**
+   ```bash
+   git clone [https://github.com/JacPM95/TurcoEspanolNinos.git](https://github.com/JacPM95/TurcoEspanolNinos.git)
