@@ -35,9 +35,3 @@ Aplicación móvil educativa e interactiva diseñada para la enseñanza bilingü
 * **Testing:** JUnit & Kotlin Test Framework
 
 ---
-
-## 🚀 Pasos para Ejecutar el Proyecto
-
-1. **Clonar el Repositorio:**
-   ```bash
-   git clone [https://github.com/JacPM95/TurcoEspanolNinos.git](https://github.com/JacPM95/TurcoEspanolNinos.git)
