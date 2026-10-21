@@ -22,14 +22,20 @@ class PerfilViewModel(application: Application) : AndroidViewModel(application) 
 
     init {
         viewModelScope.launch {
-            combine(userPreferences.aliasGuardado, userPreferences.edadGuardada) { alias, edad ->
-                alias to edad
-            }.collect { (aliasGuardado, edadGuardada) ->
+            combine(
+                userPreferences.aliasGuardado,
+                userPreferences.edadGuardada,
+                userPreferences.perfilVisible
+            ) { alias, edad, perfilVisible ->
+                Triple(alias, edad, perfilVisible)
+            }.collect { (aliasGuardado, edadGuardada, perfilVisible) ->
                 _estado.update {
+                    val perfilRegistrado = aliasGuardado.isNotBlank() && edadGuardada in 1..10
                     it.copy(
                         aliasFicticio = aliasGuardado,
                         edadSimulada = edadGuardada.takeIf { edad -> edad in 1..10 }?.toString().orEmpty(),
-                        perfilRegistrado = aliasGuardado.isNotBlank() && edadGuardada in 1..10,
+                        perfilRegistrado = perfilRegistrado,
+                        perfilVisible = !perfilRegistrado || perfilVisible,
                         cargando = false
                     )
                 }
@@ -74,12 +80,23 @@ class PerfilViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         if (resultado.esValido) {
-            _estado.update { it.copy(perfilRegistrado = true) }
+            _estado.update { it.copy(perfilRegistrado = true, perfilVisible = false) }
             viewModelScope.launch {
                 userPreferences.guardarPerfil(actual.aliasFicticio.trim(), resultado.edad!!)
             }
         }
 
         return resultado.esValido
+    }
+
+    fun abrirPerfil() {
+        _estado.update { it.copy(perfilVisible = true) }
+        viewModelScope.launch { userPreferences.guardarPerfilVisible(true) }
+    }
+
+    fun volverAlAprendizaje() {
+        if (!_estado.value.perfilRegistrado) return
+        _estado.update { it.copy(perfilVisible = false) }
+        viewModelScope.launch { userPreferences.guardarPerfilVisible(false) }
     }
 }

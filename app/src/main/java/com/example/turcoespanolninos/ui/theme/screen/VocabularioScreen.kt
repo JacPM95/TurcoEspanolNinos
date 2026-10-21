@@ -12,6 +12,7 @@ import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.compose.BackHandler
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -41,7 +42,11 @@ private enum class ResultadoPractica { PENDIENTE, ESCUCHANDO, CORRECTO, REINTENT
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VocabularioScreen(alias: String, viewModel: AprendizajeViewModel) {
+fun VocabularioScreen(
+    alias: String,
+    viewModel: AprendizajeViewModel,
+    onVolverPerfil: () -> Unit
+) {
     val estado by viewModel.estado.collectAsState()
     val context = LocalContext.current
     var tts by remember { mutableStateOf<TextToSpeech?>(null) }
@@ -190,6 +195,11 @@ fun VocabularioScreen(alias: String, viewModel: AprendizajeViewModel) {
         return
     }
 
+    BackHandler {
+        if (estado.puedeRetroceder) viewModel.irAnterior()
+        else onVolverPerfil()
+    }
+
     if (estado.medallaObtenida) {
         PantallaFelicitaciones(
             alias = alias,
@@ -210,10 +220,12 @@ fun VocabularioScreen(alias: String, viewModel: AprendizajeViewModel) {
                 title = { Text("Merhaba, $alias!") },
                 navigationIcon = {
                     IconButton(
-                        onClick = viewModel::irAnterior,
-                        enabled = estado.puedeRetroceder
+                        onClick = {
+                            if (estado.puedeRetroceder) viewModel.irAnterior()
+                            else onVolverPerfil()
+                        }
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Página anterior / Önceki sayfa")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Geri / Volver")
                     }
                 },
                 actions = {

@@ -2,6 +2,7 @@ package com.example.turcoespanolninos.data
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
@@ -20,6 +21,7 @@ class UserPreferences(private val context: Context) {
         val PAGINA_ACTUAL_KEY = intPreferencesKey("pagina_actual")
         val ESTRELLAS_KEY = intPreferencesKey("estrellas_acumuladas")
         val PALABRAS_KEY = stringSetPreferencesKey("palabras_completadas")
+        val PERFIL_VISIBLE_KEY = booleanPreferencesKey("perfil_visible")
     }
 
     val aliasGuardado: Flow<String> = context.dataStore.data.map { preferences ->
@@ -28,6 +30,10 @@ class UserPreferences(private val context: Context) {
 
     val edadGuardada: Flow<Int> = context.dataStore.data.map { preferences ->
         preferences[EDAD_KEY] ?: 0
+    }
+
+    val perfilVisible: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PERFIL_VISIBLE_KEY] ?: false
     }
 
     val progresoGuardado: Flow<ProgresoGuardado> = context.dataStore.data.map { preferences ->
@@ -43,6 +49,13 @@ class UserPreferences(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences[ALIAS_KEY] = alias
             preferences[EDAD_KEY] = edad
+            preferences[PERFIL_VISIBLE_KEY] = false
+        }
+    }
+
+    suspend fun guardarPerfilVisible(visible: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PERFIL_VISIBLE_KEY] = visible
         }
     }
 

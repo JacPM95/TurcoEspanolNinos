@@ -32,15 +32,18 @@ class MainActivity : ComponentActivity() {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             CircularProgressIndicator()
                         }
-                    } else if (estado.perfilRegistrado) {
+                    } else if (estado.perfilRegistrado && !estado.perfilVisible) {
                         VocabularioScreen(
                             alias = estado.aliasFicticio,
-                            viewModel = aprendizajeViewModel
+                            viewModel = aprendizajeViewModel,
+                            onVolverPerfil = perfilViewModel::abrirPerfil
                         )
                     } else {
                         RegistroPerfilScreen(
                             viewModel = perfilViewModel,
-                            onRegistroExitoso = {}
+                            perfilExistente = estado.perfilRegistrado,
+                            onRegistroExitoso = perfilViewModel::volverAlAprendizaje,
+                            onVolverAprendizaje = perfilViewModel::volverAlAprendizaje
                         )
                     }
                 }

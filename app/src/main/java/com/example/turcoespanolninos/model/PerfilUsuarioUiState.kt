@@ -9,6 +9,7 @@ data class PerfilUsuarioUiState(
     val imagenPerfil: Bitmap? = null,
     val errores: PerfilErrores = PerfilErrores(),
     val perfilRegistrado: Boolean = false,
+    val perfilVisible: Boolean = true,
     val cargando: Boolean = true
 )
 
