@@ -11,6 +11,7 @@ import com.example.turcoespanolninos.model.PerfilValidator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class PerfilViewModel(application: Application) : AndroidViewModel(application) {
@@ -21,16 +22,16 @@ class PerfilViewModel(application: Application) : AndroidViewModel(application) 
 
     init {
         viewModelScope.launch {
-            userPreferences.aliasGuardado.collect { aliasGuardado ->
-                if (aliasGuardado.isNotEmpty()) {
-                    _estado.update { it.copy(aliasFicticio = aliasGuardado) }
-                }
-            }
-        }
-        viewModelScope.launch {
-            userPreferences.edadGuardada.collect { edadGuardada ->
-                if (edadGuardada in 1..10) {
-                    _estado.update { it.copy(edadSimulada = edadGuardada.toString()) }
+            combine(userPreferences.aliasGuardado, userPreferences.edadGuardada) { alias, edad ->
+                alias to edad
+            }.collect { (aliasGuardado, edadGuardada) ->
+                _estado.update {
+                    it.copy(
+                        aliasFicticio = aliasGuardado,
+                        edadSimulada = edadGuardada.takeIf { edad -> edad in 1..10 }?.toString().orEmpty(),
+                        perfilRegistrado = aliasGuardado.isNotBlank() && edadGuardada in 1..10,
+                        cargando = false
+                    )
                 }
             }
         }
@@ -73,6 +74,7 @@ class PerfilViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         if (resultado.esValido) {
+            _estado.update { it.copy(perfilRegistrado = true) }
             viewModelScope.launch {
                 userPreferences.guardarPerfil(actual.aliasFicticio.trim(), resultado.edad!!)
             }

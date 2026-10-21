@@ -17,6 +17,7 @@ class UserPreferences(private val context: Context) {
         val ALIAS_KEY = stringPreferencesKey("alias_usuario")
         val EDAD_KEY = intPreferencesKey("edad_usuario")
         val NIVEL_KEY = intPreferencesKey("nivel_desbloqueado")
+        val PAGINA_ACTUAL_KEY = intPreferencesKey("pagina_actual")
         val ESTRELLAS_KEY = intPreferencesKey("estrellas_acumuladas")
         val PALABRAS_KEY = stringSetPreferencesKey("palabras_completadas")
     }
@@ -32,6 +33,7 @@ class UserPreferences(private val context: Context) {
     val progresoGuardado: Flow<ProgresoGuardado> = context.dataStore.data.map { preferences ->
         ProgresoGuardado(
             nivelDesbloqueado = preferences[NIVEL_KEY] ?: 0,
+            paginaActual = preferences[PAGINA_ACTUAL_KEY] ?: (preferences[NIVEL_KEY] ?: 0),
             estrellas = preferences[ESTRELLAS_KEY] ?: 0,
             palabrasCompletadas = preferences[PALABRAS_KEY] ?: emptySet()
         )
@@ -47,6 +49,7 @@ class UserPreferences(private val context: Context) {
     suspend fun guardarProgreso(progreso: ProgresoGuardado) {
         context.dataStore.edit { preferences ->
             preferences[NIVEL_KEY] = progreso.nivelDesbloqueado
+            preferences[PAGINA_ACTUAL_KEY] = progreso.paginaActual
             preferences[ESTRELLAS_KEY] = progreso.estrellas
             preferences[PALABRAS_KEY] = progreso.palabrasCompletadas
         }
@@ -55,6 +58,7 @@ class UserPreferences(private val context: Context) {
 
 data class ProgresoGuardado(
     val nivelDesbloqueado: Int = 0,
+    val paginaActual: Int = 0,
     val estrellas: Int = 0,
     val palabrasCompletadas: Set<String> = emptySet()
 )

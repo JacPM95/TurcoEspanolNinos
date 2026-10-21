@@ -8,9 +8,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import com.example.turcoespanolninos.ui.theme.screen.RegistroPerfilScreen
 import com.example.turcoespanolninos.ui.theme.screen.VocabularioScreen
 import com.example.turcoespanolninos.viewmodel.AprendizajeViewModel
@@ -26,9 +28,11 @@ class MainActivity : ComponentActivity() {
             MaterialTheme {
                 Surface {
                     val estado by perfilViewModel.estado.collectAsState()
-                    var mostrarVocabulario by remember { mutableStateOf(false) }
-
-                    if (mostrarVocabulario) {
+                    if (estado.cargando) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+                    } else if (estado.perfilRegistrado) {
                         VocabularioScreen(
                             alias = estado.aliasFicticio,
                             viewModel = aprendizajeViewModel
@@ -36,9 +40,7 @@ class MainActivity : ComponentActivity() {
                     } else {
                         RegistroPerfilScreen(
                             viewModel = perfilViewModel,
-                            onRegistroExitoso = {
-                                mostrarVocabulario = true
-                            }
+                            onRegistroExitoso = {}
                         )
                     }
                 }

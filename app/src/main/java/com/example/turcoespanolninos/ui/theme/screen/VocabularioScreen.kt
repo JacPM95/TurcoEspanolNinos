@@ -20,6 +20,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -188,7 +191,12 @@ fun VocabularioScreen(alias: String, viewModel: AprendizajeViewModel) {
     }
 
     if (estado.medallaObtenida) {
-        PantallaFelicitaciones(alias, estado.estrellas, viewModel::reiniciarRuta)
+        PantallaFelicitaciones(
+            alias = alias,
+            estrellas = estado.estrellas,
+            onAnterior = viewModel::irAnterior,
+            onRepasar = viewModel::reiniciarRuta
+        )
         return
     }
 
@@ -196,7 +204,29 @@ fun VocabularioScreen(alias: String, viewModel: AprendizajeViewModel) {
     val completadas = nivel.palabras.count { it.id in estado.palabrasCompletadas }
     val progreso = completadas.toFloat() / nivel.palabras.size
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Merhaba, $alias!") }) }) { padding ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Merhaba, $alias!") },
+                navigationIcon = {
+                    IconButton(
+                        onClick = viewModel::irAnterior,
+                        enabled = estado.puedeRetroceder
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Página anterior / Önceki sayfa")
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = viewModel::irSiguiente,
+                        enabled = estado.puedeAvanzar
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, "Página siguiente / Sonraki sayfa")
+                    }
+                }
+            )
+        }
+    ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -371,7 +401,12 @@ private fun TarjetaPalabra(
 }
 
 @Composable
-private fun PantallaFelicitaciones(alias: String, estrellas: Int, onRepasar: () -> Unit) {
+private fun PantallaFelicitaciones(
+    alias: String,
+    estrellas: Int,
+    onAnterior: () -> Unit,
+    onRepasar: () -> Unit
+) {
     AnimatedVisibility(visible = true, enter = fadeIn() + scaleIn()) {
         Column(
             modifier = Modifier.fillMaxSize().padding(32.dp),
@@ -412,6 +447,14 @@ private fun PantallaFelicitaciones(alias: String, estrellas: Int, onRepasar: () 
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.Center
             )
+            OutlinedButton(
+                onClick = onAnterior,
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("4. seviyeye dön")
+            }
         }
     }
 }

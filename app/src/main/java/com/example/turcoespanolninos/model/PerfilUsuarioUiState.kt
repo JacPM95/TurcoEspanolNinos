@@ -7,7 +7,9 @@ data class PerfilUsuarioUiState(
     val edadSimulada: String = "",
     val moduloSeleccionado: String = "Animales",
     val imagenPerfil: Bitmap? = null,
-    val errores: PerfilErrores = PerfilErrores()
+    val errores: PerfilErrores = PerfilErrores(),
+    val perfilRegistrado: Boolean = false,
+    val cargando: Boolean = true
 )
 
 data class PerfilErrores(

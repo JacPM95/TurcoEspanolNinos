@@ -16,8 +16,12 @@ data class NivelAprendizaje(
 
 data class AprendizajeUiState(
     val nivelActual: Int = 0,
+    val nivelDesbloqueado: Int = 0,
     val estrellas: Int = 0,
     val palabrasCompletadas: Set<String> = emptySet(),
     val medallaObtenida: Boolean = false,
     val cargando: Boolean = true
-)
+) {
+    val puedeRetroceder: Boolean get() = nivelActual > 0
+    val puedeAvanzar: Boolean get() = nivelActual < nivelDesbloqueado
+}
